@@ -1,45 +1,54 @@
+// Hand Pose Detection with ml5.js
+// https://thecodingtrain.com/tracks/ml5js-beginners-guide/ml5/hand-pose
+
 let video;
-let handpose;
-let predictions = [];
+let handPose;
+let hands = [];
 
-function setup() {
-  // 產生一個全螢幕的畫布
-  createCanvas(windowWidth, windowHeight);
-  
-  // 擷取攝影機影像內容
-  video = createCapture(VIDEO);
-  video.size(width, height);
-
-  // 初始化 handpose 模型
-  handpose = ml5.handpose(video, modelReady);
-
-  // 監聽 handpose 的 'predict' 事件，但我們不會在這裡繪製任何東西
-  handpose.on("predict", results => {
-    predictions = results;
-  });
-  
-  // 隱藏預設的 HTML 影片元素
-  video.hide();
-  
-  // 設定影像繪製模式為中心點
-  imageMode(CENTER);
+function preload() {
+  // Initialize HandPose model with flipped video input
+  handPose = ml5.handPose({ flipped: true });
 }
 
-function modelReady() {
-  console.log("Handpose 模型已載入！");
+function mousePressed() {
+  console.log(hands);
+}
+
+function gotHands(results) {
+  hands = results;
+}
+
+function setup() {
+  createCanvas(640, 480);
+  video = createCapture(VIDEO, { flipped: true });
+  video.hide();
+
+  // Start detecting hands
+  handPose.detectStart(video, gotHands);
 }
 
 function draw() {
-  // 設定畫布的背景顏色為 #e7c6ff
-  background('#e7c6ff');
-  
-  // 顯示擷取的影像內容：放置在視窗中間，寬高為整個畫布寬高的 60%
-  image(video, width / 2, height / 2, width * 0.6, height * 0.6);
+  image(video, 0, 0);
 
-  // 這部分刻意留空，以確保不會繪製任何手指關節的特效。
-  // 偵測到的手部資料儲存在 `predictions` 陣列中，供後續使用。
-}
+  // Ensure at least one hand is detected
+  if (hands.length > 0) {
+    for (let hand of hands) {
+      if (hand.confidence > 0.1) {
+        // Loop through keypoints and draw circles
+        for (let i = 0; i < hand.keypoints.length; i++) {
+          let keypoint = hand.keypoints[i];
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+          // Color-code based on left or right hand
+          if (hand.handedness == "Left") {
+            fill(255, 0, 255);
+          } else {
+            fill(255, 255, 0);
+          }
+
+          noStroke();
+          circle(keypoint.x, keypoint.y, 16);
+        }
+      }
+    }
+  }
 }
