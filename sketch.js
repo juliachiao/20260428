@@ -21,6 +21,7 @@ function gotHands(results) {
 function setup() {
   createCanvas(640, 480);
   video = createCapture(VIDEO, { flipped: true });
+  video.elt.setAttribute('playsinline', ''); // 確保手機（特別是 iOS）可以正常行內播放視訊
   video.hide();
 
   // Start detecting hands
